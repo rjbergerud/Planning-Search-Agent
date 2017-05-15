@@ -13,19 +13,10 @@ from my_planning_graph import PlanningGraph
 from functools import lru_cache
 
 def at(str1, str2):
-    return "At(" + str1 + ", " + str2 + ")"
+    return expr("At(" + str1 + ", " + str2 + ")")
 
 def in_pred(str1, str2):
-    return "In(" + str1 + ", " + str2 + ")"
-
-def cargo(c):
-    return "Cargo(" + c + ")"
-
-def plane(p):
-    return "Plane(" + p + ")"
-
-def airport(a):
-    return "Airport(" + a + ")"
+    return expr("In(" + str1 + ", " + str2 + ")")
 
 class AirCargoProblem(Problem):
     def __init__(self, cargos, planes, airports, initial: FluentState, goal: list):
@@ -91,9 +82,9 @@ class AirCargoProblem(Problem):
                 p = state[1]
                 a = state[2]
                 name = expr("Load(" + p + ", " + c + ", " + a + ")")
-                precond_pos = Expr("&", at(c, a), at(p, a), cargo(c), plane(p), airport(a)) # Where to do we get the At predicate from?
-                effect_pos = Expr(in_pred(c, p))
-                effect_neg = Expr(at(c, a))
+                precond_pos = [at(c, a), at(p, a)]
+                effect_pos = [in_pred(c, p)]
+                effect_neg = [at(c, a)]
                 action = Action(name,[precond_pos, []], [effect_pos, effect_neg])
                 loads.append(action)
 
@@ -113,10 +104,10 @@ class AirCargoProblem(Problem):
                 c = state[0]
                 p = state[1]
                 a = state[2]
-                name = expr("Load(" + p + ", " + c + ", " + a + ")")
-                precond_pos = Expr("&", in_pred(c, p), at(p, a), cargo(c), plane(p), airport(a)) # Where to do we get the At predicate from?
-                effect_pos = Expr(at(c, a))
-                effect_neg = Expr(in_pred(c, a))
+                name = expr("Unload(" + p + ", " + c + ", " + a + ")")
+                precond_pos = [in_pred(c, p), at(p, a)]
+                effect_pos = [at(c, a)]
+                effect_neg = [in_pred(c, p)]
                 action = Action(name,[precond_pos, []], [effect_pos, effect_neg])
                 unloads.append(action)
 
