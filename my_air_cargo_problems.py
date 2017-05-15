@@ -4,6 +4,7 @@ from aimacode.search import (
     Node, Problem,
 )
 from aimacode.utils import expr
+from aimacode.utils import Expr
 from lp_utils import (
     FluentState, encode_state, decode_state,
 )
@@ -11,6 +12,20 @@ from my_planning_graph import PlanningGraph
 
 from functools import lru_cache
 
+def at(str1, str2):
+    return "At(" + str1 + ", " + str2 + ")"
+
+def in_pred(str1, str2):
+    return "In(" + str1 + ", " + str2 + ")"
+
+def cargo(c):
+    return "Cargo(" + c + ")"
+
+def plane(p):
+    return "Plane(" + p + ")"
+
+def airport(a):
+    return "Airport(" + a + ")"
 
 class AirCargoProblem(Problem):
     def __init__(self, cargos, planes, airports, initial: FluentState, goal: list):
@@ -60,7 +75,28 @@ class AirCargoProblem(Problem):
             :return: list of Action objects
             """
             loads = []
-            # TODO create all load ground actions from the domain Load action
+
+            domain = [(cargo, plane, airport) for cargo in self.cargos
+                                                for plane in self.planes
+                                                for airport in self.airports]
+            # Need our domain to be states
+            # We use expressions to represent states
+
+            # For each cargo, plane, and airport, create an action
+            # for loading the cargo on that plane at that airport
+            # Action(expr, [precondition_pos: expr, precondition_neg: expr], [eff_pos: expr, eff_neg: expr])
+
+            for state in domain:
+                c = state[0]
+                p = state[1]
+                a = state[2]
+                name = expr("Load(" + p + ", " + c + ", " + a + ")")
+                precond_pos = Expr("&", at(c, a), at(p, a), cargo(c), plane(p), airport(a)) # Where to do we get the At predicate from?
+                effect_pos = Expr(in_pred(c, p))
+                effect_neg = Expr(at(c, a))
+                action = Action(name,[precond_pos, []], [effect_pos, effect_neg])
+                loads.append(action)
+
             return loads
 
         def unload_actions():
@@ -69,7 +105,21 @@ class AirCargoProblem(Problem):
             :return: list of Action objects
             """
             unloads = []
-            # TODO create all Unload ground actions from the domain Unload action
+
+            domain = [(cargo, plane, airport) for cargo in self.cargos
+                                                for plane in self.planes
+                                                for airport in self.airports]
+            for state in domain:
+                c = state[0]
+                p = state[1]
+                a = state[2]
+                name = expr("Load(" + p + ", " + c + ", " + a + ")")
+                precond_pos = Expr("&", in_pred(c, p), at(p, a), cargo(c), plane(p), airport(a)) # Where to do we get the At predicate from?
+                effect_pos = Expr(at(c, a))
+                effect_neg = Expr(in_pred(c, a))
+                action = Action(name,[precond_pos, []], [effect_pos, effect_neg])
+                unloads.append(action)
+
             return unloads
 
         def fly_actions():
