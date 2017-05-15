@@ -174,13 +174,31 @@ class AirCargoProblem(Problem):
         action in the given state. The action must be one of
         self.actions(state).
 
-        :param state: state entering node
+        :param state: state entering node, str of "TFTT..."
         :param action: Action applied
         :return: resulting state after action
         """
         # TODO implement
+        # if action not in self.actions(state):
+        #     return False;
         new_state = FluentState([], [])
+        old_state = decode_state(state, self.state_map)
+        # copy old state fluents to new state
+        for fluent in old_state.pos:
+            if fluent not in action.effect_rem:
+                new_state.pos.append(fluent)
+        for fluent in old_state.neg:
+            if fluent not in action.effect_add:
+                new_state.pos.append(fluent)
+        for fluent in action.effect_add:
+            if fluent not in new_state.pos: #want to avoid duplicates in list
+                new_state.pos.append(fluent)
+        for fluent in action.effect_rem:
+            if fluent not in new_state.neg: #want to avoid dupes
+                new_state.neg.append(fluent)
+
         return encode_state(new_state, self.state_map)
+
 
     def goal_test(self, state: str) -> bool:
         """ Test the state to see if goal is reached
