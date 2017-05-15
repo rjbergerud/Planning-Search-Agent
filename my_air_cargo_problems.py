@@ -145,7 +145,28 @@ class AirCargoProblem(Problem):
         :return: list of Action objects
         """
         # TODO implement
+        # curr_state is a FluentState object
+        # has FluentState.pos, FluentState.neg, lists of expressions
+        # method .sentence returns conjunctive sentence of all expressions in state
+        curr_state = decode_state(state, self.state_map)
         possible_actions = []
+
+        curr_KB = PropKB(curr_state.sentence())
+        for action in self.actions_list:
+            precond_check = True
+            for clause in action.precond_pos:
+                if clause not in curr_KB.clauses:
+                    precond_check = False
+                    print(action, "positive precondition not satisfied: ", clause)
+
+            # check for negative clauses
+            for clause in action.precond_neg:
+                if clause in curr_KB.clauses:
+                    precond_check = False
+                    print(action, "negative precondition not satisfied: ", clause)
+            # No variables to replace in action
+            if precond_check:
+                possible_actions.append(action)
         return possible_actions
 
     def result(self, state: str, action: Action):
